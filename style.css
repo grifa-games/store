@@ -645,6 +645,58 @@ footer {
     color: var(--accent);
 }
 
+/* Receipt & Success UI */
+.receipt-content {
+    background: #111;
+    border: 2px solid var(--accent);
+    padding: 0;
+    max-width: 600px;
+}
+
+#printable-receipt {
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+#printable-receipt::before {
+    content: "PAID";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 8rem;
+    color: rgba(156, 240, 50, 0.05);
+    font-weight: 900;
+    pointer-events: none;
+}
+
+/* Print Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #printable-receipt,
+    #printable-receipt * {
+        visibility: visible;
+    }
+
+    #printable-receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+        border: none !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+}
+
 .card-visual {
     background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
     padding: 25px;
