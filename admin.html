@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRIFA ADMIN | لوحة التحكم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="admin-body">
+    <!-- Admin Login Overlay - Keep it simple and absolute -->
+    <div id="admin-login-overlay" class="modal show"
+        style="position:fixed; inset:0; background:#050505; z-index: 99999; display:flex; align-items:center; justify-content:center;">
+        <div class="modal-content"
+            style="max-width: 400px; text-align: center; background:#111; padding:40px; border-radius:15px; border:1px solid #222;">
+            <h2 class="brand-font" style="margin-bottom: 20px; color:#fff;">دخول المشرف</h2>
+            <div class="input-group">
+                <label>رمز الدخول</label>
+                <input type="password" id="admin-passcode-input" placeholder="••••••••••••"
+                    style="text-align: center; letter-spacing: 5px; width:100%; padding:12px; background:#000; border:1px solid #333; color:var(--accent); border-radius:8px;">
+            </div>
+            <button class="btn-primary" onclick="checkAdminAccess()" style="width:100%; margin-top:10px;">دخول</button>
+            <p id="admin-login-error" style="color:var(--error); margin-top:15px; display:none;">الرمز غير صحيح!</p>
+        </div>
+    </div>
+
+    <div class="admin-sidebar">
+        <h2 class="brand-font">GRIFA <span>ADMIN</span></h2>
+        <nav>
+            <ul>
+                <li class="tab-link active" onclick="switchTab('stats', this)"><i class="fa-solid fa-chart-line"></i>
+                    <span>الإحصائيات</span>
+                </li>
+                <li class="tab-link" onclick="switchTab('products', this)"><i class="fa-solid fa-gamepad"></i>
+                    <span>المنتجات</span>
+                </li>
+                <li class="tab-link" onclick="switchTab('orders', this)"><i class="fa-solid fa-receipt"></i>
+                    <span>الطلبات</span>
+                </li>
+                <li class="tab-link" onclick="switchTab('banners', this)"><i class="fa-solid fa-image"></i>
+                    <span>البنرات</span>
+                </li>
+                <li class="tab-link" onclick="switchTab('coupons', this)"><i class="fa-solid fa-ticket"></i>
+                    <span>الكوبونات</span>
+                </li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="index.html"><i class="fa-solid fa-arrow-right-from-bracket"></i> العودة للمتجر</a>
+        </div>
+    </div>
+
+    <main class="admin-main">
+        <!-- Stats Section -->
+        <section id="stats-tab" class="admin-tab active">
+            <header class="admin-header">
+                <h1>الإحصائيات العامة</h1>
+            </header>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>إجمالي المبيعات</h3>
+                    <p>0 دج</p>
+                </div>
+                <div class="stat-card">
+                    <h3>طلبات بانتظار التنفيذ</h3>
+                    <p>0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>المنتجات المتوفرة</h3>
+                    <p>0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products-tab" class="admin-tab">
+            <header class="admin-header">
+                <h1>إدارة المنتجات</h1>
+                <button class="btn-primary" onclick="openAddProductModal()">إضافة منتج</button>
+            </header>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>المنتج</th>
+                            <th>الفئة</th>
+                            <th>السعر</th>
+                            <th>المخزون</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-products-table"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Orders Section -->
+        <section id="orders-tab" class="admin-tab">
+            <header class="admin-header">
+                <h1>إدارة الطلبات</h1>
+            </header>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>رقم الطلب</th>
+                            <th>العميل</th>
+                            <th>الإجمالي</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-orders-table"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Banners Section -->
+        <section id="banners-tab" class="admin-tab">
+            <header class="admin-header">
+                <h1>إدارة البنرات</h1>
+                <button class="btn-primary" onclick="openAddBannerModal()">إضافة بنر</button>
+            </header>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الصورة</th>
+                            <th>العنوان</th>
+                            <th>الرابط/الوصف</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-banners-table"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Coupons Section -->
+        <section id="coupons-tab" class="admin-tab">
+            <header class="admin-header">
+                <h1>إدارة الكوبونات</h1>
+                <button class="btn-primary" onclick="openAddCouponModal()">إضافة كوبون</button>
+            </header>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الكود</th>
+                            <th>الخصم (%)</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-coupons-table"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>إضافة منتج</h2>
+            <form id="product-form">
+                <div class="input-group"><label>الاسم</label><input type="text" required></div>
+                <div class="input-group"><label>الوصف</label><textarea required></textarea></div>
+                <div class="input-row">
+                    <div class="input-group"><label>السعر</label><input type="number" required></div>
+                    <div class="input-group">
+                        <label>الفئة</label>
+                        <select>
+                            <option value="PlayStation">بلايستيشن</option>
+                            <option value="Xbox">إكس بوكس</option>
+                            <option value="Nintendo">نينتندو</option>
+                            <option value="Gift Cards">بطاقات شحن</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group"><label>رابط الصورة</label><input type="text" required></div>
+                <div class="input-group">
+                    <label>محتوى التسليم (يرسل للعميل في الإيميل)</label>
+                    <textarea required></textarea>
+                </div>
+                <button type="submit" class="btn-primary w-full">حفظ المنتج</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Banner Modal -->
+    <div id="banner-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>إضافة بنر</h2>
+            <form id="banner-form">
+                <div class="input-group"><label>العنوان</label><input type="text" required></div>
+                <div class="input-group"><label>الوصف</label><input type="text" required></div>
+                <div class="input-group"><label>رابط الصورة</label><input type="text" required></div>
+                <button type="submit" class="btn-primary w-full">حفظ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Coupon Modal -->
+    <div id="coupon-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>إضافة كوبون جديد</h2>
+            <form id="coupon-form">
+                <div class="input-group"><label>كود الخصم</label><input type="text" required placeholder="GRIFA2024">
+                </div>
+                <div class="input-group"><label>نسبة الخصم (%)</label><input type="number" required placeholder="10">
+                </div>
+                <button type="submit" class="btn-primary w-full">حفظ الكوبون</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>

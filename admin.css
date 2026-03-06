@@ -1,0 +1,226 @@
+.admin-body {
+    display: flex;
+    background-color: #050505;
+    min-height: 100vh;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* Sidebar positioned on the right for RTL */
+.admin-sidebar {
+    width: 280px;
+    background: #111;
+    border-left: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 0;
+    position: fixed;
+    height: 100vh;
+    top: 0;
+    right: 0;
+    /* Right side for RTL */
+    z-index: 1001;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.admin-sidebar h2 {
+    padding: 0 30px 40px;
+    font-size: 1.5rem;
+    color: #fff;
+    border-bottom: 1px solid #222;
+    margin-bottom: 20px;
+}
+
+.admin-sidebar h2 span {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.admin-sidebar nav {
+    flex: 1;
+}
+
+.admin-sidebar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    /* Ensure vertical stacking */
+}
+
+.tab-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 30px;
+    color: #888;
+    text-decoration: none;
+    transition: 0.3s;
+    cursor: pointer;
+    font-weight: 600;
+    border-right: 4px solid transparent;
+}
+
+.tab-link:hover,
+.tab-link.active {
+    background: rgba(156, 240, 50, 0.1);
+    color: var(--accent);
+    border-right: 4px solid var(--accent);
+}
+
+.tab-link i {
+    font-size: 1.2rem;
+    width: 25px;
+    text-align: center;
+}
+
+/* Main content adjusted for the right sidebar */
+.admin-main {
+    flex: 1;
+    margin-right: 280px;
+    /* Space for the right sidebar */
+    padding: 40px;
+    background: #080808;
+    min-height: 100vh;
+    box-sizing: border-box;
+    width: calc(100% - 280px);
+}
+
+.admin-tab {
+    display: none;
+}
+
+.admin-tab.active {
+    display: block;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: #151515;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #222;
+}
+
+.stat-card h3 {
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.stat-card p {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.data-table-container {
+    background: #151515;
+    border-radius: 12px;
+    border: 1px solid #222;
+    overflow: hidden;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+}
+
+.data-table th {
+    background: #1a1a1a;
+    padding: 18px 25px;
+    color: #888;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #222;
+}
+
+.data-table td {
+    padding: 18px 25px;
+    border-bottom: 1px solid #222;
+    color: #eee;
+}
+
+.action-btn {
+    background: #252525;
+    border: 1px solid #333;
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin: 0 5px;
+}
+
+.action-btn:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+.action-btn.delete:hover {
+    background: #ff4b4b;
+    color: #fff;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 20px 30px;
+    border-top: 1px solid #222;
+}
+
+.sidebar-footer a {
+    color: #ff4b4b;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+    .admin-sidebar {
+        width: 80px;
+    }
+
+    .admin-sidebar h2,
+    .tab-link span {
+        display: none;
+    }
+
+    .admin-main {
+        margin-right: 80px;
+        width: calc(100% - 80px);
+    }
+}
+
+/* Simple centering for login overlay */
+#admin-login-overlay.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+#admin-login-overlay.modal.show {
+    display: flex;
+}

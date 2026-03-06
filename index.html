@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRIFA GAMES | متجر الألعاب الأول</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Notifications -->
+    <div id="notifications-container"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-wrapper">
+            <div class="logo">
+                <h1 class="brand-font">GRIFA <span>GAMES</span></h1>
+            </div>
+
+            <nav>
+                <ul>
+                    <li><a href="#" class="active" data-i18n="home">الرئيسية</a></li>
+                    <li><a href="#products" data-i18n="shop">المتجر</a></li>
+                    <li><a href="#" onclick="toggleModal('tracking-modal')" data-i18n="track">تتبع طلباتي</a></li>
+                </ul>
+            </nav>
+
+            <div class="nav-actions">
+                <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()"><i
+                        class="fa-solid fa-moon"></i></button>
+                <button class="icon-btn" id="lang-toggle" onclick="toggleLang()">EN</button>
+
+                <div class="search-box">
+                    <input type="text" data-i18n-placeholder="search_placeholder" oninput="handleSearch(event)">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+
+                <button class="icon-btn" onclick="goToCheckout()">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count">0</span>
+                </button>
+
+                <div id="user-profile">
+                    <a href="login.html" class="icon-btn" id="login-link"><i class="fa-solid fa-user-plus"></i></a>
+                    <span id="user-name" style="font-size:0.8rem; display:none; margin-right:5px"></span>
+                    <button class="icon-btn" id="logout-btn" style="display:none;" onclick="logout()"><i
+                            class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Slider -->
+        <section class="hero-container container">
+            <div class="hero-slider">
+                <div class="slider-wrapper" id="banner-slider"></div>
+                <button class="slider-nav prev" onclick="moveSlide(-1)"><i
+                        class="fa-solid fa-chevron-right"></i></button>
+                <button class="slider-nav next" onclick="moveSlide(1)"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="slider-dots" id="slider-dots"></div>
+            </div>
+        </section>
+
+        <!-- Categories -->
+        <section class="categories container">
+            <h2 class="section-title" data-i18n="sections">الأقسام</h2>
+            <div class="categories-grid" id="categories-list"></div>
+        </section>
+
+        <!-- Products -->
+        <section class="products container" id="products">
+            <h2 class="section-title" data-i18n="best_sellers">الألعاب الأكثر مبيعاً</h2>
+            <div class="products-grid" id="products-list"></div>
+        </section>
+    </main>
+
+    <!-- Tracking Modal -->
+    <div id="tracking-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="toggleModal('tracking-modal')">&times;</span>
+            <h2 class="brand-font" data-i18n="track_modal_title">تتبع طلباتك</h2>
+            <p data-i18n="track_modal_desc">أدخل بريدك الإلكتروني لمشاهدة جميع طلباتك وحالتها</p>
+            <div class="input-group" style="display:flex; gap:10px; margin-top:20px;">
+                <input type="text" id="order-id-input" data-i18n-placeholder="order_email_placeholder">
+                <button class="btn-primary" style="width:auto" onclick="trackOrder()"
+                    data-i18n="track_btn">تتبع</button>
+            </div>
+            <div id="tracking-result" style="margin-top:20px"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-logo">
+                <h1 class="brand-font">GRIFA <span>GAMES</span></h1>
+                <p class="footer-desc" data-i18n="footer_desc"></p>
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-discord"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h3 data-i18n="quick_links">روابط سريعة</h3>
+                <ul>
+                    <li><a href="legal/terms.html" data-i18n="terms">الشروط والأحكام</a></li>
+                    <li><a href="legal/privacy.html" data-i18n="privacy">سياسة الخصوصية</a></li>
+                    <li><a href="legal/support.html" data-i18n="support">الدعم الفني</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h3 data-i18n="follow_us">تابعنا</h3>
+                <p style="color:var(--text-secondary); font-size:0.9rem">اشترك للحصول على أحدث العروض والمنتجات الحصرية.
+                </p>
+            </div>
+        </div>
+        <div class="container"
+            style="text-align:center; border-top:1px solid var(--border-color); padding-top:20px; margin-top:40px;">
+            <p>&copy; 2026 GRIFA GAMES. <span data-i18n="rights">جميع الحقوق محفوظة.</span></p>
+        </div>
+    </footer>
+
+    <!-- SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
