@@ -123,6 +123,26 @@
         </div>
     </main>
 
+    <!-- Processing Overlay Modal -->
+    <div id="processing-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px; text-align: center; padding: 50px 30px;">
+            <div class="loader"
+                style="width: 60px; height: 60px; border: 5px solid #222; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 30px;">
+            </div>
+            <h2 id="processing-title" class="brand-font" style="color: #fff; margin-bottom: 20px;">جاري معالجة الطلب...
+            </h2>
+            <div id="processing-steps"
+                style="text-align: right; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px;">
+                <p id="step-valid" style="margin-bottom: 12px; color: #888;"><i
+                        class="fa-solid fa-circle-notch fa-spin step-icon"></i> التحقق من بيانات البطاقة...</p>
+                <p id="step-balance" style="margin-bottom: 12px; color: #888;"><i
+                        class="fa-solid fa-circle step-icon"></i> فحص رصيد الحساب (CCP)...</p>
+                <p id="step-transfer" style="margin: 0; color: #888;"><i class="fa-solid fa-circle step-icon"></i> تحويل
+                    الأموال إلى الحساب المستلم...</p>
+            </div>
+        </div>
+    </div>
+
     <!-- OTP Verification Modal -->
     <div id="otp-modal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
@@ -213,8 +233,14 @@
             const expiry = document.getElementById('card-expiry').value;
             const cvv = document.getElementById('card-cvv').value;
 
+            // Strict Edahabia Check (Prefix 6074)
+            if (!num.startsWith('6074')) {
+                notifier.show("خطأ: يرجى إدخال رقم بطاقة ذهبية صالح (يبدأ بـ 6074)", "error");
+                return false;
+            }
+
             if (!name || num.length < 16 || !expiry || cvv.length < 3) {
-                notifier.show("يرجى التأكد من بيانات البطاقة بشكل صحيح", "error");
+                notifier.show("يرجى التأكد من بيانات البطاقة بشكل كامل وصحيح", "error");
                 return false;
             }
             return true;
@@ -222,18 +248,14 @@
 
         async function step2To3() {
             if (!validateCard()) return;
-
-            notifier.show("جاري الاتصال بالبنك...", "info");
-            setTimeout(() => {
-                document.getElementById('otp-modal').classList.add('show');
-            }, 1000);
+            document.getElementById('otp-modal').classList.add('show');
         }
 
         function verifyOTP() {
             const otp = document.getElementById('otp-input').value;
-            if (otp === "123456" || otp.length === 6) { // Simulate any 6 digits for testing
+            if (otp.length === 6) {
                 document.getElementById('otp-modal').classList.remove('show');
-                submitRealOrder();
+                startSmartProcessing();
             } else {
                 const err = document.getElementById('otp-error');
                 err.style.display = 'block';
@@ -241,98 +263,124 @@
             }
         }
 
+        function startSmartProcessing() {
+            const modal = document.getElementById('processing-modal');
+            modal.classList.add('show');
+
+            const sValid = document.getElementById('step-valid');
+            const sBalance = document.getElementById('step-balance');
+            const sTransfer = document.getElementById('step-transfer');
+
+            // Step 1: Validating
+            setTimeout(() => {
+                sValid.style.color = "var(--success)";
+                sValid.querySelector('i').className = "fa-solid fa-circle-check";
+
+                // Step 2: Balance Check
+                sBalance.style.color = "#fff";
+                sBalance.querySelector('i').className = "fa-solid fa-circle-notch fa-spin";
+
+                setTimeout(() => {
+                    sBalance.style.color = "var(--success)";
+                    sBalance.querySelector('i').className = "fa-solid fa-circle-check";
+
+                    // Step 3: Transfer
+                    sTransfer.style.color = "#fff";
+                    sTransfer.querySelector('i').className = "fa-solid fa-circle-notch fa-spin";
+
+                    setTimeout(() => {
+                        sTransfer.style.color = "var(--success)";
+                        sTransfer.querySelector('i').className = "fa-solid fa-circle-check";
+
+                        setTimeout(() => {
+                            modal.classList.remove('show');
+                            submitRealOrder();
+                        }, 1000);
+                    }, 2500);
+                }, 2000);
+            }, 1500);
+        }
+
         async function submitRealOrder() {
             const user = JSON.parse(localStorage.getItem('grifa_user'));
             const cart = currentState.cart;
+            const subtotal = cart.reduce((s, i) => s + i.price, 0);
+            const discount = window.appliedCoupon ? (subtotal * window.appliedCoupon.discount / 100) : 0;
+            const finalTotal = subtotal - discount;
 
-            notifier.show("جاري معالجة الدفع...", "info");
+            const orderData = {
+                id: 'GF-' + Math.floor(Math.random() * 9000 + 1000),
+                userId: user.uid,
+                email: user.email,
+                name: document.getElementById('order-fullname').value,
+                phone: document.getElementById('order-phone').value,
+                items: cart,
+                total: finalTotal,
+                discount: discount,
+                status: 'completed',
+                date: new Date().toLocaleString('ar-DZ'),
+                payment: 'Edahabia Pay',
+                ccp_dest: '00799999002764092903'
+            };
 
-            // Mocking the payment delay
-            setTimeout(async () => {
-                const subtotal = cart.reduce((s, i) => s + i.price, 0);
-                const discount = window.appliedCoupon ? (subtotal * window.appliedCoupon.discount / 100) : 0;
-                const finalTotal = subtotal - discount;
+            const orders = JSON.parse(localStorage.getItem('grifa_orders')) || [];
+            orders.push(orderData);
+            localStorage.setItem('grifa_orders', JSON.stringify(orders));
 
-                const orderData = {
-                    id: 'GF-' + Math.floor(Math.random() * 9000 + 1000),
-                    userId: user.uid,
-                    email: user.email,
-                    name: document.getElementById('order-fullname').value,
-                    phone: document.getElementById('order-phone').value,
-                    items: cart,
-                    total: finalTotal,
-                    discount: discount,
-                    status: 'completed',
-                    date: new Date().toLocaleString('ar-DZ'),
-                    payment: 'Edahabia'
-                };
+            try {
+                if (typeof db !== 'undefined') {
+                    await db.collection('orders').doc(orderData.id).set(orderData);
+                }
+            } catch (e) { }
 
-                // Add to orders list for admin
-                const orders = JSON.parse(localStorage.getItem('grifa_orders')) || [];
-                orders.push(orderData);
-                localStorage.setItem('grifa_orders', JSON.stringify(orders));
-
-                // Save to Firestore (Mock link for now)
-                try {
-                    if (typeof db !== 'undefined') {
-                        await db.collection('orders').doc(orderData.id).set(orderData);
-                    }
-                } catch (e) { }
-
-                // Build Official Receipt
-                document.getElementById('receipt-details').innerHTML = `
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                            <span>رقم الطلب:</span>
-                            <strong style="color: var(--accent);">${orderData.id}</strong>
+            document.getElementById('receipt-details').innerHTML = `
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; border: 1px solid #333;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                        <span>رقم المعاملة:</span>
+                        <strong style="color: var(--accent);">${orderData.id}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                        <span>تاريخ العملية:</span>
+                        <span>${orderData.date}</span>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+                    
+                    <div style="margin-bottom: 15px;">
+                        <p style="margin-bottom: 10px; font-weight: bold; color: #888;">تفاصيل الدفع (CCP):</p>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span>خصم من حساب (البطاقة الذهبية):</span>
+                            <span style="color: #ff4b4b;">-${orderData.total} دج</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                            <span>التاريخ:</span>
-                            <span>${orderData.date}</span>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 5px;">
+                            <span>إلى حساب المتجر (CCP):</span>
+                            <span style="color: var(--success); text-align: left;">+${orderData.total} دج<br><small style="color: #666;">Account: ${orderData.ccp_dest}</small></span>
                         </div>
-                         <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                            <span>العميل:</span>
-                            <span>${orderData.name}</span>
-                        </div>
-                        <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
-                        <div style="margin-bottom: 15px;">
-                            <p style="margin-bottom: 10px; font-weight: bold;">المنتجات المشتراة:</p>
-                            ${cart.map(item => `
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
-                                    <span>${item.name}</span>
-                                    <span>${item.price} دج</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
-                        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: var(--accent);">
-                            <span>الإجمالي المدفوع:</span>
-                            <span>${orderData.total} دج</span>
-                        </div>
-                        ${discount > 0 ? `<div style="text-align: left; font-size: 0.8rem; color: var(--success);">تم خصم ${discount} دج (كوبون)</div>` : ''}
                     </div>
 
-                    <div style="margin-top: 25px; padding: 20px; background: rgba(156, 240, 50, 0.1); border-radius: 10px; border: 1px dashed var(--accent);">
-                        <h4 style="color: var(--accent); margin-bottom: 10px;"><i class="fa-solid fa-truck-fast"></i> بيانات التسليم (تم الإرسال للإيميل):</h4>
-                        ${cart.map(item => `
-                            <div style="margin-bottom: 10px;">
-                                <p><strong>${item.name}:</strong></p>
-                                <code style="display: block; background: #000; padding: 10px; border-radius: 5px; color: #fff;">${item.delivery || "جاري إعداد الكود... سيصلك خلال دقايق"}</code>
-                            </div>
-                        `).join('')}
+                    <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: var(--accent);">
+                        <span>المبلغ النهائي:</span>
+                        <span>${orderData.total} دج</span>
                     </div>
-                `;
+                </div>
 
-                notifier.show("تم تأكيد الدفع بنجاح!", "success");
-                setTimeout(() => {
-                    notifier.show("جاري إرسال البيانات إلى بريدك الإلكتروني...", "info");
-                    setTimeout(() => {
-                        document.getElementById('success-modal').classList.add('show');
-                        localStorage.removeItem('grifa_cart');
-                    }, 2000);
-                }, 1000);
+                <div style="margin-top: 25px; padding: 20px; background: rgba(156, 240, 50, 0.1); border-radius: 10px; border: 1px dashed var(--accent);">
+                    <h4 style="color: var(--accent); margin-bottom: 10px;"><i class="fa-solid fa-key"></i> أكواد التسجيل (تم الإرسال للإيميل):</h4>
+                    ${cart.map(item => `
+                        <div style="margin-bottom: 10px;">
+                            <p style="font-size: 0.9rem;"><strong>${item.name}:</strong></p>
+                            <code style="display: block; background: #000; padding: 12px; border-radius: 5px; color: var(--accent); font-family: 'Orbitron';">${item.delivery || "ADMIN_PENDING_CODE"}</code>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
 
-            }, 2000);
+            notifier.show("تمت عملية سحب الأموال بنجاح!", "success");
+            setTimeout(() => {
+                document.getElementById('success-modal').classList.add('show');
+                localStorage.removeItem('grifa_cart');
+                if (typeof updateCartBadge === 'function') updateCartBadge();
+            }, 1000);
         }
 
         function selectPayment(p) {
