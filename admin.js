@@ -18,9 +18,6 @@ let orders = getSafeJSON('grifa_orders', []);
 let banners = getSafeJSON('grifa_banners', []);
 let coupons = getSafeJSON('grifa_coupons', []);
 
-// --- Security ---
-const ADMIN_CODE = "1962684120112026";
-
 // --- Tab Management ---
 function switchTab(tabId, el) {
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
