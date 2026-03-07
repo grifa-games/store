@@ -316,8 +316,8 @@ function openChat(userId, userName) {
 function renderAdminMessage(msg) {
     const container = document.getElementById('admin-chat-messages');
     const div = document.createElement('div');
-    // Admin uses .user style for self (green), .admin for user (gray)
-    div.className = `msg ${msg.sender === 'admin' ? 'user' : 'admin'}`;
+    // Align with central style: .user (Customer) = Right/Green, .admin (Admin) = Left/Gray
+    div.className = `msg ${msg.sender === 'admin' ? 'admin' : 'user'}`;
 
     let content = '';
     if (msg.text) content += `<div>${msg.text}</div>`;
@@ -330,6 +330,36 @@ function renderAdminMessage(msg) {
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
+
+// Add Paste Listener for Admin
+document.getElementById('admin-chat-input').addEventListener('paste', async (e) => {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (let index in items) {
+        const item = items[index];
+        if (item.kind === 'file' && item.type.includes('image')) {
+            const blob = item.getAsFile();
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const base64 = event.target.result;
+                if (!activeChatUserId) return;
+                try {
+                    await db.collection('chats').doc(activeChatUserId).collection('messages').add({
+                        image: base64,
+                        sender: 'admin',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('chats').doc(activeChatUserId).set({
+                        lastMessage: "📷 صورة",
+                        lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } catch (err) {
+                    console.error("Paste Upload Error:", err);
+                }
+            };
+            reader.readAsDataURL(blob);
+        }
+    }
+});
 
 async function sendAdminMessage() {
     const input = document.getElementById('admin-chat-input');
@@ -421,6 +451,21 @@ function initAdmin() {
     renderOrdersTable();
     renderBannersTable();
     renderCouponsTable();
+
+    // Global listener for unread count (always active)
+    db.collection('chats').onSnapshot(snapshot => {
+        let unreadTotal = 0;
+        snapshot.docs.forEach(doc => {
+            if (doc.data().unread) unreadTotal++;
+        });
+        const unreadBadge = document.getElementById('unread-count');
+        if (unreadTotal > 0) {
+            unreadBadge.textContent = unreadTotal;
+            unreadBadge.style.display = 'flex';
+        } else {
+            unreadBadge.style.display = 'none';
+        }
+    });
 
     // Default chat list sync if tab is refreshed
     if (document.getElementById('messages-tab').classList.contains('active')) {

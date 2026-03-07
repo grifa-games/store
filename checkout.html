@@ -275,7 +275,46 @@
 
             // Initialize Chat
             initChatSystem(user);
+
+            // Add Paste Listener for Images
+            document.getElementById('chat-input').addEventListener('paste', (e) => {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let index in items) {
+                    const item = items[index];
+                    if (item.kind === 'file' && item.type.includes('image')) {
+                        const blob = item.getAsFile();
+                        processAndUploadPaste(blob);
+                    }
+                }
+            });
         });
+
+        async function processAndUploadPaste(file) {
+            notifier.show("جاري معالجة الصورة الملصقة...", "info");
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result;
+                const user = JSON.parse(localStorage.getItem('grifa_user'));
+                try {
+                    await db.collection('chats').doc(user.uid).collection('messages').add({
+                        image: base64,
+                        sender: 'user',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('chats').doc(user.uid).set({
+                        lastMessage: "📷 صورة ملصقة",
+                        lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        unread: true,
+                        userName: document.getElementById('order-fullname').value || user.email,
+                        userEmail: user.email
+                    }, { merge: true });
+                    notifier.show("تم إرسال الصورة بنجاح", "success");
+                } catch (err) {
+                    notifier.show("خطأ في إرسال الصورة", "error");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
 
         let chatUnsubscribe = null;
         function initChatSystem(user) {
