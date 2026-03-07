@@ -7,26 +7,6 @@ let orders = JSON.parse(localStorage.getItem('grifa_orders')) || [];
 let banners = JSON.parse(localStorage.getItem('grifa_banners')) || [];
 let coupons = JSON.parse(localStorage.getItem('grifa_coupons')) || [];
 
-// --- Notifier Helper (Common) ---
-const notifier = {
-    show(msg, type = 'info') {
-        const container = document.getElementById('notifications-container') || document.body;
-        const div = document.createElement('div');
-        div.className = `notification ${type}`;
-        div.style.cssText = "position:fixed; top:20px; right:20px; background:#222; color:#fff; padding:15px 25px; border-radius:8px; z-index:10000; border-left:4px solid var(--accent); box-shadow:0 5px 15px rgba(0,0,0,0.5); transition:0.3s; transform:translateX(120%);";
-        if (type === 'error') div.style.borderLeftColor = 'var(--error)';
-        if (type === 'success') div.style.borderLeftColor = 'var(--success)';
-
-        div.innerHTML = `<span>${msg}</span>`;
-        document.body.appendChild(div);
-        setTimeout(() => div.style.transform = "translateX(0)", 10);
-        setTimeout(() => {
-            div.style.transform = "translateX(120%)";
-            setTimeout(() => div.remove(), 300);
-        }, 3000);
-    }
-};
-
 // --- Security ---
 const ADMIN_CODE = "1962684120112026";
 
