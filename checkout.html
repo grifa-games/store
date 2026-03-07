@@ -586,43 +586,11 @@
 
             notifier.show("تمت عملية سحب الأموال بنجاح!", "success");
 
-            // Send Real Email using EmailJS
-            sendOrderEmail(orderData);
-
             setTimeout(() => {
                 document.getElementById('success-modal').classList.add('show');
                 localStorage.removeItem('grifa_cart');
                 if (typeof updateCartBadge === 'function') updateCartBadge();
             }, 1000);
-        }
-
-        function sendOrderEmail(order) {
-            // Configuration for EmailJS (User needs to fill these after setup)
-            const SERVICE_ID = "service_xqo6ncm"; // Placeholder
-            const TEMPLATE_ID = "template_ga2xcxo"; // Placeholder
-            const PUBLIC_KEY = "UZ-a_H3ZJRVRA5_Ob"; // Placeholder
-
-            emailjs.init(PUBLIC_KEY);
-
-            const templateParams = {
-                order_id: order.id,
-                customer_name: order.name,
-                customer_email: order.email,
-                total_amount: order.total + " دج",
-                items: order.items.map(i => `${i.name} (${i.delivery || 'جاري المعالجة'})`).join(', '),
-                ccp_account: order.ccp_dest,
-                from_email: "oussamachorba8@gmail.com" // Desired sender
-            };
-
-            notifier.show("جاري إرسال تفاصيل الطلب إلى إيميلك...", "info");
-
-            emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
-                .then(() => {
-                    notifier.show("تم إرسال الإيميل بنجاح!", "success");
-                }, (error) => {
-                    console.error("EmailJS Error:", error);
-                    notifier.show("فشل إرسال الإيميل، لكن طلبك محفوظ في النظام.", "error");
-                });
         }
 
         function selectPayment(p) {

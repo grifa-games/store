@@ -347,6 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
     applyLang();
     updateCartBadge();
 
+    updateCartBadge();
+
     // Check for user
     const user = JSON.parse(localStorage.getItem('grifa_user'));
     if (user) {
@@ -361,3 +363,46 @@ document.addEventListener('DOMContentLoaded', () => {
         if (logoutBtn) logoutBtn.style.display = 'block';
     }
 });
+
+/**
+ * Shared Email System (EmailJS)
+ */
+function sendOrderEmail(order) {
+    // Configuration for EmailJS
+    const SERVICE_ID = "service_xqo6ncm";
+    const TEMPLATE_ID = "template_ga2xcxo";
+    const PUBLIC_KEY = "UZ-a_H3ZJRVRA5_Ob";
+
+    if (typeof emailjs === 'undefined') {
+        console.error("EmailJS SDK not loaded!");
+        return;
+    }
+
+    emailjs.init(PUBLIC_KEY);
+
+    const templateParams = {
+        order_id: order.id,
+        customer_name: order.name,
+        customer_email: order.email,
+        total_amount: order.total + " دج",
+        items: order.items.map(i => `${i.name} (${i.delivery || 'جاري المعالجة'})`).join(', '),
+        ccp_account: order.ccp_dest || "00799999002764092903",
+        from_email: "oussamachorba8@gmail.com"
+    };
+
+    if (typeof notifier !== 'undefined') {
+        notifier.show("جاري إرسال تفاصيل الطلب إلى الإيميل...", "info");
+    }
+
+    emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
+        .then(() => {
+            if (typeof notifier !== 'undefined') {
+                notifier.show("تم إرسال الإيميل بنجاح!", "success");
+            }
+        }, (error) => {
+            console.error("EmailJS Error:", error);
+            if (typeof notifier !== 'undefined') {
+                notifier.show("فشل إرسال الإيميل، لكن الطلب محفوظ في النظام.", "error");
+            }
+        });
+}

@@ -460,7 +460,12 @@ async function confirmGrantOrder() {
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 4. Close modal and refresh
+        // 4. Send Email Automatically
+        if (typeof sendOrderEmail === 'function') {
+            sendOrderEmail(orderData);
+        }
+
+        // 5. Close modal and refresh
         closeModal();
         renderOrdersTable();
         alert("تم منح الطلبية وإرسالها بنجاح!");
