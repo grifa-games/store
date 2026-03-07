@@ -165,9 +165,10 @@
                     </div>
                 </div>
 
-                <div style="display:flex; gap:10px">
+                <div style="display:flex; gap:10px" id="checkout-actions">
                     <button class="btn-primary" style="background:#333; color:#fff" onclick="nextStep(1)">رجوع</button>
-                    <button class="btn-primary" onclick="step2To3()">تأكيد الدفع وإرسال طلبك</button>
+                    <button class="btn-primary" id="confirm-payment-btn" onclick="step2To3()">تأكيد الدفع وإرسال
+                        طلبك</button>
                 </div>
             </div>
         </div>
@@ -317,6 +318,15 @@
             if (!text) return;
 
             const user = JSON.parse(localStorage.getItem('grifa_user'));
+            if (!user) {
+                notifier.show("يرجى تسجيل الدخول أولاً", "error");
+                return;
+            }
+
+            if (typeof db === 'undefined' || !db) {
+                notifier.show("خطأ: تعذر الاتصال بقاعدة البيانات. تأكد من إعداد Firebase بشكل صحيح.", "error");
+                return;
+            }
 
             try {
                 await db.collection('chats').doc(user.uid).collection('messages').add({
@@ -325,7 +335,6 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Update chat metadata for admin list
                 await db.collection('chats').doc(user.uid).set({
                     lastMessage: text,
                     lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -337,18 +346,22 @@
                 input.value = '';
             } catch (e) {
                 console.error("Chat Error:", e);
-                notifier.show("فشل إرسال الرسالة", "error");
+                notifier.show("فشل إرسال الرسالة. تأكد من تفعيل Firestore Rules.", "error");
             }
         }
 
         async function uploadChatImage() {
-            const file = document.getElementById('chat-image').files[0];
+            const fileInput = document.getElementById('chat-image');
+            const file = fileInput.files[0];
             if (!file) return;
 
-            notifier.show("جاري رفع الصورة...", "info");
+            if (typeof db === 'undefined' || !db) {
+                notifier.show("خطأ: تعذر الاتصال بقاعدة البيانات.", "error");
+                return;
+            }
 
-            // NOTE: In a real app, use firebase.storage().ref().put(file)
-            // For this simulation, we'll convert to Base64 (or use a placeholder if Firebase Storage isn't set up)
+            notifier.show("جاري معالجة الصورة...", "info");
+
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const base64 = e.target.result;
@@ -364,12 +377,16 @@
                     await db.collection('chats').doc(user.uid).set({
                         lastMessage: "📷 صورة",
                         lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        unread: true
+                        unread: true,
+                        userName: document.getElementById('order-fullname').value || user.email,
+                        userEmail: user.email
                     }, { merge: true });
 
                     notifier.show("تم رفع الصورة بنجاح", "success");
+                    fileInput.value = '';
                 } catch (err) {
-                    notifier.show("خطأ في رفع الصورة", "error");
+                    console.error("Upload Error:", err);
+                    notifier.show("خطأ في رفع الصورة. قد يكون حجمها كبيراً جداً.", "error");
                 }
             };
             reader.readAsDataURL(file);
@@ -576,16 +593,18 @@
             const chatSection = document.getElementById('payment-chat-section');
             const cardSection = document.getElementById('payment-card-section');
             const ccpInfo = document.querySelector('.ccp-info');
+            const confirmBtn = document.getElementById('confirm-payment-btn');
 
             if (p === 'chat') {
                 chatSection.style.display = 'block';
                 cardSection.style.display = 'none';
                 ccpInfo.style.display = 'none';
+                confirmBtn.style.display = 'none'; // Hide confirmation button in chat mode
             } else if (p === 'edahabia' || p === 'card') {
-                // Should not happen as they are disabled, but for logic consistency:
                 chatSection.style.display = 'none';
                 cardSection.style.display = 'block';
                 ccpInfo.style.display = 'block';
+                confirmBtn.style.display = 'block';
             }
         }
 
