@@ -2,41 +2,24 @@
  * GRIFA ADMIN - Full Functional Logic
  */
 
-let products = JSON.parse(localStorage.getItem('grifa_products')) || [];
-let orders = JSON.parse(localStorage.getItem('grifa_orders')) || [];
-let banners = JSON.parse(localStorage.getItem('grifa_banners')) || [];
-let coupons = JSON.parse(localStorage.getItem('grifa_coupons')) || [];
-
-// --- Security ---
-const ADMIN_CODE = "1962684120112026";
-
-function checkAdminAccess() {
-    const input = document.getElementById('admin-passcode-input').value.trim();
-    const error = document.getElementById('admin-login-error');
-    const overlay = document.getElementById('admin-login-overlay');
-
-    if (input === ADMIN_CODE) {
-        overlay.classList.remove('show');
-        overlay.style.setProperty('display', 'none', 'important');
-        sessionStorage.setItem('grifa_admin_authenticated', 'true');
-        initAdmin();
-    } else {
-        error.style.display = 'block';
-        setTimeout(() => { error.style.display = 'none'; }, 2000);
+// --- Safe Data Loading ---
+function getSafeJSON(key, defaultVal) {
+    try {
+        const val = localStorage.getItem(key);
+        return val ? JSON.parse(val) : defaultVal;
+    } catch (e) {
+        console.error("JSON Parse Error for " + key, e);
+        return defaultVal;
     }
 }
 
-// Check on load
-document.addEventListener('DOMContentLoaded', () => {
-    if (sessionStorage.getItem('grifa_admin_authenticated') === 'true') {
-        const overlay = document.getElementById('admin-login-overlay');
-        if (overlay) {
-            overlay.classList.remove('show');
-            overlay.style.setProperty('display', 'none', 'important');
-        }
-        initAdmin();
-    }
-});
+let products = getSafeJSON('grifa_products', []);
+let orders = getSafeJSON('grifa_orders', []);
+let banners = getSafeJSON('grifa_banners', []);
+let coupons = getSafeJSON('grifa_coupons', []);
+
+// --- Security ---
+const ADMIN_CODE = "1962684120112026";
 
 // --- Tab Management ---
 function switchTab(tabId, el) {

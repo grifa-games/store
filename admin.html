@@ -286,6 +286,38 @@
         </div>
     </div>
 
+    <script>
+        // High-priority login check (Inline for maximum reliability)
+        const ADMIN_CODE = "1962684120112026";
+        function checkAdminAccess() {
+            const input = document.getElementById('admin-passcode-input').value.trim();
+            const error = document.getElementById('admin-login-error');
+            const overlay = document.getElementById('admin-login-overlay');
+
+            if (input === ADMIN_CODE) {
+                overlay.classList.remove('show');
+                overlay.style.setProperty('display', 'none', 'important');
+                sessionStorage.setItem('grifa_admin_authenticated', 'true');
+                if (typeof initAdmin === 'function') initAdmin();
+                else console.error("initAdmin not found - admin.js might have failed to load.");
+            } else {
+                error.style.display = 'block';
+                setTimeout(() => { error.style.display = 'none'; }, 2000);
+            }
+        }
+
+        // Auto-login check
+        if (sessionStorage.getItem('grifa_admin_authenticated') === 'true') {
+            document.addEventListener('DOMContentLoaded', () => {
+                const overlay = document.getElementById('admin-login-overlay');
+                if (overlay) {
+                    overlay.classList.remove('show');
+                    overlay.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }
+    </script>
+
     <!-- SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
