@@ -46,6 +46,10 @@ function switchTab(tabId, el) {
     const targetTab = document.getElementById(tabId + '-tab');
     if (targetTab) targetTab.classList.add('active');
     if (el) el.classList.add('active');
+
+    if (tabId === 'messages') {
+        initAdminChatList();
+    }
 }
 
 // --- Stats ---
@@ -237,6 +241,179 @@ function deleteCoupon(index) {
     renderCouponsTable();
 }
 
+// --- Chat & Messages Management ---
+let activeChatUserId = null;
+let chatMessagesUnsubscribe = null;
+
+function initAdminChatList() {
+    console.log("Initializing Admin Chat List...");
+    db.collection('chats').orderBy('lastTimestamp', 'desc').onSnapshot(snapshot => {
+        const listContainer = document.getElementById('admin-chat-list');
+        let unreadTotal = 0;
+
+        if (snapshot.empty) {
+            listContainer.innerHTML = '<p style="padding: 20px; color: #666; text-align: center;">لا يوجد محادثات نشطة</p>';
+            return;
+        }
+
+        listContainer.innerHTML = snapshot.docs.map(doc => {
+            const data = doc.data();
+            if (data.unread) unreadTotal++;
+
+            return `
+                <div class="chat-item ${activeChatUserId === doc.id ? 'active' : ''} ${data.unread ? 'unread' : ''}" 
+                     onclick="openChat('${doc.id}', '${data.userName || data.userEmail}')"
+                     style="padding: 15px; border-bottom: 1px solid #222; cursor: pointer; transition: 0.3s; position: relative;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">${data.userName || 'مستخدم مجهول'}</div>
+                    <div style="font-size: 0.8rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${data.lastMessage || ''}</div>
+                    ${data.unread ? '<div style="position: absolute; top: 15px; left: 15px; width: 8px; height: 8px; background: var(--error); border-radius: 50%;"></div>' : ''}
+                </div>
+            `;
+        }).join('');
+
+        const unreadBadge = document.getElementById('unread-count');
+        if (unreadTotal > 0) {
+            unreadBadge.textContent = unreadTotal;
+            unreadBadge.style.display = 'flex';
+        } else {
+            unreadBadge.style.display = 'none';
+        }
+    });
+}
+
+function openChat(userId, userName) {
+    activeChatUserId = userId;
+
+    // UI Updates
+    document.getElementById('active-chat-header').style.visibility = 'visible';
+    document.getElementById('admin-chat-input-area').style.visibility = 'visible';
+    document.getElementById('chat-user-name').textContent = userName;
+
+    // Mark as read
+    db.collection('chats').doc(userId).update({ unread: false });
+
+    // Switch active class in list
+    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+
+    // Listen for messages
+    if (chatMessagesUnsubscribe) chatMessagesUnsubscribe();
+
+    const messagesContainer = document.getElementById('admin-chat-messages');
+    messagesContainer.innerHTML = '';
+
+    chatMessagesUnsubscribe = db.collection('chats').doc(userId).collection('messages')
+        .orderBy('timestamp', 'asc')
+        .onSnapshot(snapshot => {
+            snapshot.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    renderAdminMessage(change.doc.data());
+                }
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+}
+
+function renderAdminMessage(msg) {
+    const container = document.getElementById('admin-chat-messages');
+    const div = document.createElement('div');
+    // Admin uses .user style for self (green), .admin for user (gray)
+    div.className = `msg ${msg.sender === 'admin' ? 'user' : 'admin'}`;
+
+    let content = '';
+    if (msg.text) content += `<div>${msg.text}</div>`;
+    if (msg.image) content += `<img src="${msg.image}" style="max-width: 200px; border-radius: 8px; cursor: pointer;" onclick="window.open('${msg.image}')">`;
+
+    const time = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' }) : '';
+    content += `<span class="time">${time}</span>`;
+
+    div.innerHTML = content;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendAdminMessage() {
+    const input = document.getElementById('admin-chat-input');
+    const text = input.value.trim();
+    if (!text || !activeChatUserId) return;
+
+    try {
+        await db.collection('chats').doc(activeChatUserId).collection('messages').add({
+            text: text,
+            sender: 'admin',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection('chats').doc(activeChatUserId).set({
+            lastMessage: text,
+            lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        input.value = '';
+    } catch (e) {
+        console.error("Admin Chat Error:", e);
+    }
+}
+
+// --- Grant Order Logic ---
+function openGrantOrderModal() {
+    const select = document.getElementById('grant-product-select');
+    select.innerHTML = products.map(p => `<option value="${p.id}">${p.name} (${p.price} دج)</option>`).join('');
+    document.getElementById('grant-order-modal').classList.add('show');
+}
+
+async function confirmGrantOrder() {
+    if (!activeChatUserId) return;
+
+    const productId = document.getElementById('grant-product-select').value;
+    const deliveryCode = document.getElementById('grant-product-code').value;
+    const product = products.find(p => p.id == productId);
+
+    if (!deliveryCode) {
+        alert("يرجى إدخال كود التفعيل أولاً");
+        return;
+    }
+
+    // Get user info from chat doc
+    const chatDoc = await db.collection('chats').doc(activeChatUserId).get();
+    const userData = chatDoc.data();
+
+    const orderData = {
+        id: 'GF-MANUAL-' + Math.floor(Math.random() * 9000 + 1000),
+        userId: activeChatUserId,
+        email: userData.userEmail,
+        name: userData.userName,
+        items: [{ ...product, delivery: deliveryCode }],
+        total: product.price,
+        status: 'completed',
+        date: new Date().toLocaleString('ar-DZ'),
+        payment: 'Manual Grant'
+    };
+
+    try {
+        // 1. Save order to Firestore
+        await db.collection('orders').doc(orderData.id).set(orderData);
+
+        // 2. Add to local orders
+        orders.push(orderData);
+        localStorage.setItem('grifa_orders', JSON.stringify(orders));
+
+        // 3. Send message in chat
+        await db.collection('chats').doc(activeChatUserId).collection('messages').add({
+            text: `✅ تم إرسال طلبك بنجاح! تفقد بريدك الإلكتروني: ${orderData.email}`,
+            sender: 'admin',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 4. Close modal and refresh
+        closeModal();
+        renderOrdersTable();
+        alert("تم منح الطلبية وإرسالها بنجاح!");
+    } catch (e) {
+        console.error("Grant Error:", e);
+        alert("حدث خطأ أثناء منح الطلبية");
+    }
+}
+
 // --- Bootstrap ---
 function initAdmin() {
     renderStats();
@@ -244,6 +421,11 @@ function initAdmin() {
     renderOrdersTable();
     renderBannersTable();
     renderCouponsTable();
+
+    // Default chat list sync if tab is refreshed
+    if (document.getElementById('messages-tab').classList.contains('active')) {
+        initAdminChatList();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', initAdmin);

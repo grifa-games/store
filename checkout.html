@@ -83,13 +83,23 @@
                 <p style="color:var(--text-secondary); margin-top:10px">اختر وسيلة الدفع المناسبة للتحويل إلى CCP</p>
 
                 <div class="payment-methods">
-                    <div class="method-card active" onclick="selectPayment('edahabia')">
+                    <div class="method-card" style="opacity: 0.6; cursor: not-allowed; position: relative;">
                         <i class="fa-solid fa-credit-card"></i>
                         الذهبية / Edahabia
+                        <span
+                            style="position: absolute; top: 10px; left: 10px; background: var(--accent); color: #000; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: bold;">قيد
+                            التطوير</span>
                     </div>
-                    <div class="method-card" onclick="selectPayment('card')">
+                    <div class="method-card" style="opacity: 0.6; cursor: not-allowed; position: relative;">
                         <i class="fa-solid fa-building-columns"></i>
                         CIB / بطاقة بنكية
+                        <span
+                            style="position: absolute; top: 10px; left: 10px; background: var(--accent); color: #000; font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: bold;">قيد
+                            التطوير</span>
+                    </div>
+                    <div class="method-card active" onclick="selectPayment('chat')">
+                        <i class="fa-solid fa-comments"></i>
+                        الدردشة مع المشرف
                     </div>
                 </div>
 
@@ -98,23 +108,59 @@
                     <div class="ccp-number">00799999002764092903</div>
                 </div>
 
-                <div class="card-visual">
-                    <div class="input-group">
-                        <label>رقم البطاقة (البطاقة الذهبية تبدأ بـ 6074)</label>
-                        <input type="text" id="card-number" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" required>
-                    </div>
-                    <div class="input-group">
-                        <label>اسم صاحب البطاقة</label>
-                        <input type="text" id="card-name" placeholder="الاسم كما هو مكتوب في البطاقة" required>
-                    </div>
-                    <div style="display:flex; gap:10px">
-                        <div class="input-group" style="flex:2">
-                            <label>تاريخ الانتهاء</label>
-                            <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" required>
+                <div id="payment-chat-section" style="margin-top: 30px;">
+                    <div class="chat-container"
+                        style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 400px;">
+                        <div class="chat-header"
+                            style="background: rgba(255,255,255,0.05); padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 10px; height: 10px; background: #9cf032; border-radius: 50%;"></div>
+                            <span style="font-weight: bold;">المشرف (أونلاين)</span>
                         </div>
-                        <div class="input-group" style="flex:1">
-                            <label>CVV</label>
-                            <input type="password" id="card-cvv" placeholder="XXX" maxlength="3" required>
+                        <div id="chat-messages"
+                            style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                            <!-- Messages will appear here -->
+                            <div class="msg admin"
+                                style="background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px 12px 0 12px; align-self: flex-start; max-width: 80%; font-size: 0.9rem;">
+                                مرحباً بك! يرجى إرسال صورة وصل الدفع (بريدي موب أو CCP) هنا وسأقوم بتفعيل طلبك فوراً.
+                            </div>
+                        </div>
+                        <div class="chat-input-area"
+                            style="padding: 15px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;">
+                            <label for="chat-image" style="cursor: pointer; color: var(--accent); font-size: 1.2rem;">
+                                <i class="fa-solid fa-camera"></i>
+                                <input type="file" id="chat-image" accept="image/*" style="display: none;"
+                                    onchange="uploadChatImage()">
+                            </label>
+                            <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا..."
+                                style="flex: 1; background: #000; border: 1px solid #333; padding: 10px; border-radius: 8px; color: #fff;">
+                            <button onclick="sendChatMessage()"
+                                style="background: var(--accent); color: #000; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer;">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="payment-card-section" style="display: none;">
+                    <div class="card-visual">
+                        <div class="input-group">
+                            <label>رقم البطاقة (البطاقة الذهبية تبدأ بـ 6074)</label>
+                            <input type="text" id="card-number" placeholder="XXXX XXXX XXXX XXXX" maxlength="19"
+                                required>
+                        </div>
+                        <div class="input-group">
+                            <label>اسم صاحب البطاقة</label>
+                            <input type="text" id="card-name" placeholder="الاسم كما هو مكتوب في البطاقة" required>
+                        </div>
+                        <div style="display:flex; gap:10px">
+                            <div class="input-group" style="flex:2">
+                                <label>تاريخ الانتهاء</label>
+                                <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div class="input-group" style="flex:1">
+                                <label>CVV</label>
+                                <input type="password" id="card-cvv" placeholder="XXX" maxlength="3" required>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -225,7 +271,109 @@
                 `;
             }).join('');
             document.getElementById('final-total').textContent = total + ' دج';
+
+            // Initialize Chat
+            initChatSystem(user);
         });
+
+        let chatUnsubscribe = null;
+        function initChatSystem(user) {
+            const chatMessages = document.getElementById('chat-messages');
+
+            // Listen for messages in user's specific chat doc
+            chatUnsubscribe = db.collection('chats').doc(user.uid).collection('messages')
+                .orderBy('timestamp', 'asc')
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'added') {
+                            const msg = change.doc.data();
+                            renderMessage(msg);
+                        }
+                    });
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+        }
+
+        function renderMessage(msg) {
+            const chatMessages = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `msg ${msg.sender === 'admin' ? 'admin' : 'user'}`;
+
+            let content = '';
+            if (msg.text) content += `<div>${msg.text}</div>`;
+            if (msg.image) content += `<img src="${msg.image}" onclick="window.open('${msg.image}')">`;
+
+            const time = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' }) : '';
+            content += `<span class="time">${time}</span>`;
+
+            div.innerHTML = content;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const user = JSON.parse(localStorage.getItem('grifa_user'));
+
+            try {
+                await db.collection('chats').doc(user.uid).collection('messages').add({
+                    text: text,
+                    sender: 'user',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Update chat metadata for admin list
+                await db.collection('chats').doc(user.uid).set({
+                    lastMessage: text,
+                    lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    userName: document.getElementById('order-fullname').value || user.email,
+                    userEmail: user.email,
+                    unread: true
+                }, { merge: true });
+
+                input.value = '';
+            } catch (e) {
+                console.error("Chat Error:", e);
+                notifier.show("فشل إرسال الرسالة", "error");
+            }
+        }
+
+        async function uploadChatImage() {
+            const file = document.getElementById('chat-image').files[0];
+            if (!file) return;
+
+            notifier.show("جاري رفع الصورة...", "info");
+
+            // NOTE: In a real app, use firebase.storage().ref().put(file)
+            // For this simulation, we'll convert to Base64 (or use a placeholder if Firebase Storage isn't set up)
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result;
+                const user = JSON.parse(localStorage.getItem('grifa_user'));
+
+                try {
+                    await db.collection('chats').doc(user.uid).collection('messages').add({
+                        image: base64,
+                        sender: 'user',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    await db.collection('chats').doc(user.uid).set({
+                        lastMessage: "📷 صورة",
+                        lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        unread: true
+                    }, { merge: true });
+
+                    notifier.show("تم رفع الصورة بنجاح", "success");
+                } catch (err) {
+                    notifier.show("خطأ في رفع الصورة", "error");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
 
         function nextStep(s) {
             document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
@@ -238,9 +386,9 @@
             const expiry = document.getElementById('card-expiry').value;
             const cvv = document.getElementById('card-cvv').value;
 
-            // Strict Edahabia Check (Prefix 6074)
-            if (!num.startsWith('6074')) {
-                notifier.show("خطأ: يرجى إدخال رقم بطاقة ذهبية صالح (يبدأ بـ 6074)", "error");
+            // Strict Edahabia Check (Prefix 6074 or 6280)
+            if (!num.startsWith('6074') && !num.startsWith('6280')) {
+                notifier.show("خطأ: يرجى إدخال رقم بطاقة ذهبية صالح (يبدأ بـ 6074 أو 6280)", "error");
                 return false;
             }
 
@@ -394,9 +542,9 @@
 
         function sendOrderEmail(order) {
             // Configuration for EmailJS (User needs to fill these after setup)
-            const SERVICE_ID = "service_oussama"; // Placeholder
-            const TEMPLATE_ID = "template_grifa_order"; // Placeholder
-            const PUBLIC_KEY = "user_placeholder"; // Placeholder
+            const SERVICE_ID = "service_xqo6ncm"; // Placeholder
+            const TEMPLATE_ID = "template_ga2xcxo"; // Placeholder
+            const PUBLIC_KEY = "UZ-a_H3ZJRVRA5_Ob"; // Placeholder
 
             emailjs.init(PUBLIC_KEY);
 
@@ -424,6 +572,21 @@
         function selectPayment(p) {
             document.querySelectorAll('.method-card').forEach(el => el.classList.remove('active'));
             event.currentTarget.classList.add('active');
+
+            const chatSection = document.getElementById('payment-chat-section');
+            const cardSection = document.getElementById('payment-card-section');
+            const ccpInfo = document.querySelector('.ccp-info');
+
+            if (p === 'chat') {
+                chatSection.style.display = 'block';
+                cardSection.style.display = 'none';
+                ccpInfo.style.display = 'none';
+            } else if (p === 'edahabia' || p === 'card') {
+                // Should not happen as they are disabled, but for logic consistency:
+                chatSection.style.display = 'none';
+                cardSection.style.display = 'block';
+                ccpInfo.style.display = 'block';
+            }
         }
 
         function applyCoupon() {

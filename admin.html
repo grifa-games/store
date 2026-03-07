@@ -46,6 +46,13 @@
                 <li class="tab-link" onclick="switchTab('coupons', this)"><i class="fa-solid fa-ticket"></i>
                     <span>الكوبونات</span>
                 </li>
+                <li class="tab-link" onclick="switchTab('messages', this)" id="messages-tab-link"
+                    style="position: relative;">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>الرسائل</span>
+                    <span id="unread-count"
+                        style="position: absolute; top: 0; right: 0; background: var(--error); color: white; border-radius: 50%; width: 15px; height: 15px; font-size: 0.6rem; display: none; align-items: center; justify-content: center;"></span>
+                </li>
             </ul>
         </nav>
         <div class="sidebar-footer">
@@ -159,6 +166,44 @@
                 </table>
             </div>
         </section>
+
+        <!-- Messages Section -->
+        <section id="messages-tab" class="admin-tab">
+            <header class="admin-header">
+                <h1>رسائل العملاء</h1>
+            </header>
+            <div class="chat-admin-layout"
+                style="display: grid; grid-template-columns: 300px 1fr; gap: 20px; height: calc(100vh - 150px); background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #222;">
+                <!-- Chat List -->
+                <div class="chat-list" style="border-left: 1px solid #222; overflow-y: auto;">
+                    <div id="admin-chat-list">
+                        <!-- Chat entries injected here -->
+                        <p style="padding: 20px; color: #666; text-align: center;">لا يوجد محادثات نشطة</p>
+                    </div>
+                </div>
+                <!-- Active Chat -->
+                <div class="active-chat-container" style="display: flex; flex-direction: column;">
+                    <div id="active-chat-header"
+                        style="padding: 15px; background: #000; border-bottom: 1px solid #222; font-weight: bold; display: flex; justify-content: space-between; align-items: center; visibility: hidden;">
+                        <span id="chat-user-name">اسم المستخدم</span>
+                        <button class="btn-primary" style="width: auto; padding: 5px 15px; font-size: 0.8rem;"
+                            onclick="openGrantOrderModal()">إعطاء طلبية</button>
+                    </div>
+                    <div id="admin-chat-messages"
+                        style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                        <p style="margin: auto; color: #444;">اختر محادثة لبدء الدردشة</p>
+                    </div>
+                    <div id="admin-chat-input-area"
+                        style="padding: 15px; background: #000; border-top: 1px solid #222; display: flex; gap: 10px; visibility: hidden;">
+                        <input type="text" id="admin-chat-input" placeholder="اكتب رداً..."
+                            style="flex: 1; background: #111; border: 1px solid #333; padding: 10px; border-radius: 8px; color: #fff;">
+                        <button class="btn-primary" style="width: 40px; height: 40px;" onclick="sendAdminMessage()">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Modals -->
@@ -205,18 +250,24 @@
         </div>
     </div>
 
-    <!-- Coupon Modal -->
-    <div id="coupon-modal" class="modal">
-        <div class="modal-content">
+    <!-- Grant Order Modal -->
+    <div id="grant-order-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2>إضافة كوبون جديد</h2>
-            <form id="coupon-form">
-                <div class="input-group"><label>كود الخصم</label><input type="text" required placeholder="GRIFA2024">
-                </div>
-                <div class="input-group"><label>نسبة الخصم (%)</label><input type="number" required placeholder="10">
-                </div>
-                <button type="submit" class="btn-primary w-full">حفظ الكوبون</button>
-            </form>
+            <h2 class="brand-font" style="margin-bottom: 20px;">إعطاء طلبية يدوياً</h2>
+            <div class="input-group">
+                <label>اختر المنتج</label>
+                <select id="grant-product-select"
+                    style="width: 100%; padding: 12px; background: #000; color: #fff; border: 1px solid #333; border-radius: 8px;">
+                    <!-- Products injected here -->
+                </select>
+            </div>
+            <div class="input-group">
+                <label>كود التفعيل (سيصل للزبون)</label>
+                <textarea id="grant-product-code" placeholder="أدخل كود اللعبة أو رابط التحميل..."
+                    style="width: 100%; padding: 12px; background: #000; color: var(--accent); border: 1px solid #333; border-radius: 8px; height: 100px;"></textarea>
+            </div>
+            <button class="btn-primary w-full" onclick="confirmGrantOrder()">إرسال الطلبية بنجاح</button>
         </div>
     </div>
 
